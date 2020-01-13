@@ -309,3 +309,49 @@ error:
 	free(out);
 	return NULL;
 }
+
+/** Quotes a string for POSIX shell.
+ * @return a single-quoted string allocated by malloc(); NULL on failure.
+ */
+char *wordquote(const char *str) {
+	size_t len = strlen(str);
+	size_t buflen = len + 3;
+	size_t written = 0;
+	char *ret = NULL;
+	char *c = str, *end = str + len;
+	char *quote = NULL;
+
+	/* Don't allocate so few. */
+	if(buflen < 32) buflen = 32;
+	ret = malloc(buflen);
+	if(ret == NULL) return ret;
+
+	ret[written++] = '\'';
+    while(c < end && (quote = strchr(c, '\''))) {
+		/* Resize the buffer for 3 more chars in "'\\''", end quote, and 0. */
+		if (buflen < written + (end - c) + 3 + 2) {
+			buflen = 2 * buflen;
+			ret = realloc(ret, buflen);
+			if(ret == NULL) return ret;
+		}
+
+		/* Literals. */
+		memcpy(&ret[written], c, quote - c);
+		written += quote - c;
+
+		/* Quote and move on. */
+		memcpy(&ret[written], "'\\''", 4);
+		written += 4;
+		c = quote + 1;
+	}
+
+	if(c < end) {
+		memcpy(&ret[written], c, end - c);
+		written += end - c;
+	}
+
+	ret[written++] = '\'';
+	ret[written++] = '\0';
+
+	return ret;
+}

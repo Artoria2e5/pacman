@@ -746,8 +746,9 @@ static int apply_deltas(alpm_handle_t *handle)
 		for(dlts = delta_path; dlts; dlts = dlts->next) {
 			alpm_delta_t *d = dlts->data;
 			char *delta, *from, *to;
+			char *qdelta, *qfrom, *qto;
 			char command[PATH_MAX];
-			size_t len = 0;
+			size_t len = 0, cmdlen = 0;
 
 			delta = _alpm_filecache_find(handle, d->delta);
 			/* the initial package might be in a different cachedir */
@@ -762,13 +763,18 @@ static int apply_deltas(alpm_handle_t *handle)
 			len = strlen(cachedir) + strlen(d->to) + 2;
 			MALLOC(to, len, free(delta); free(from); RET_ERR(handle, ALPM_ERR_MEMORY, 1));
 			snprintf(to, len, "%s/%s", cachedir, d->to);
+			qdelta = wordquote(delta);
+			qfrom = wordquote(from);
+			qto = wordquote(to);
 
 			/* build the patch command */
-			if(endswith(to, ".gz")) {
+			if (!(qdelta && qfrom && qto)) {
+				cmdlen = SIZE_MAX;
+			} else if(endswith(to, ".gz")) {
 				/* special handling for gzip : we disable timestamp with -n option */
-				snprintf(command, PATH_MAX, "xdelta3 -d -q -R -c -s %s %s | gzip -n > %s", from, delta, to);
+				cmdlen = snprintf(command, PATH_MAX, "xdelta3 -d -q -R -c -s %s %s | gzip -n > %s", qfrom, qdelta, qto);
 			} else {
-				snprintf(command, PATH_MAX, "xdelta3 -d -q -s %s %s %s", from, delta, to);
+				cmdlen = snprintf(command, PATH_MAX, "xdelta3 -d -q -s %s %s %s", qfrom, qdelta, qto);
 			}
 
 			_alpm_log(handle, ALPM_LOG_DEBUG, "command: %s\n", command);
@@ -777,7 +783,7 @@ static int apply_deltas(alpm_handle_t *handle)
 			event.delta = d;
 			EVENT(handle, &event);
 
-			int retval = system(command);
+			int retval = cmdlen < PATH_MAX ? system(command) : -1;
 			if(retval == 0) {
 				event.type = ALPM_EVENT_DELTA_PATCH_DONE;
 				EVENT(handle, &event);
@@ -795,6 +801,9 @@ static int apply_deltas(alpm_handle_t *handle)
 			FREE(from);
 			FREE(to);
 			FREE(delta);
+			FREE(qfrom);
+			FREE(qto);
+			FREE(qdelta);
 
 			if(retval != 0) {
 				/* one delta failed for this package, cancel the remaining ones */
