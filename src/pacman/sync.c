@@ -222,7 +222,9 @@ static int sync_cleancache(int level)
 					/* skip package databases within the cache directory */
 					"*.db*", "*.files*",
 					/* skip source packages within the cache directory */
-					"*.src.tar.*"
+					"*.src.tar.*",
+					/* skip package deltas, we aren't smart enough to clean these yet */
+					"*.delta"
 				};
 				size_t j;
 
@@ -853,6 +855,7 @@ int sync_prepare_execute(void)
 			case ALPM_ERR_PKG_INVALID:
 			case ALPM_ERR_PKG_INVALID_CHECKSUM:
 			case ALPM_ERR_PKG_INVALID_SIG:
+			case ALPM_ERR_DLT_INVALID:
 				for(i = data; i; i = alpm_list_next(i)) {
 					char *filename = i->data;
 					printf(_("%s is invalid or corrupted\n"), filename);
