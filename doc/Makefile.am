@@ -10,6 +10,7 @@ MANPAGES = \
 	makepkg-template.1 \
 	repo-add.8 \
 	vercmp.8 \
+	pkgdelta.8 \
 	pacman-key.8 \
 	PKGBUILD.5 \
 	makepkg.conf.5 \
