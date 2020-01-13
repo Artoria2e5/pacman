@@ -6,7 +6,7 @@ dbpath    = ${localstatedir}/lib/pacman/
 gpgdir    = ${sysconfdir}/pacman.d/gnupg/
 cachedir  = ${localstatedir}/cache/pacman/pkg/
 
-bin_PROGRAMS = vercmp testpkg
+bin_PROGRAMS = vercmp testpkg cleanupdelta
 
 AM_CPPFLAGS = \
 	-imacros $(top_builddir)/config.h \
@@ -19,6 +19,9 @@ AM_CPPFLAGS = \
 
 AM_CFLAGS = -pedantic -D_GNU_SOURCE $(WARNING_CFLAGS) \
 	$(LIBARCHIVE_CFLAGS)
+
+cleanupdelta_SOURCES = cleanupdelta.c
+cleanupdelta_LDADD = $(top_builddir)/lib/libalpm/.libs/libalpm.la
 
 testpkg_SOURCES = testpkg.c
 testpkg_LDADD = $(top_builddir)/lib/libalpm/.libs/libalpm.la
