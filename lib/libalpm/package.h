@@ -118,6 +118,8 @@ struct __alpm_pkg_t {
 	alpm_list_t *makedepends;
 	alpm_list_t *conflicts;
 	alpm_list_t *provides;
+	alpm_list_t *deltas;
+	alpm_list_t *delta_path;
 	alpm_list_t *removes; /* in transaction targets only */
 	alpm_pkg_t *oldpkg; /* in transaction targets only */
 
